@@ -37,7 +37,7 @@ function EditQuestionModal({ question, onClose, fetchCategories }) {
     };
 
     try {
-      await updateQuestion(updatedQuestion).unwrap();
+     await updateQuestion({ questionId: question._id, updatedData: updatedQuestion }).unwrap();
       dispatch(setAuthError("Successfully updated question"));
       fetchCategories();
       onClose();
