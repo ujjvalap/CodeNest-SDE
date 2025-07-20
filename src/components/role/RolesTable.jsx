@@ -19,7 +19,7 @@ import { useGetUsersQuery, useDeleteUserMutation } from "../../redux/api/api";
 function RolesTable() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const userType = useSelector((state) => state.auth.userType);
+  const userType = useSelector((state) => state.user.userType);
 
   const [editUser, setEditUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -72,17 +72,17 @@ function RolesTable() {
     return { userCount, adminCount, superAdminCount };
   }, [usersData]);
 
-  // Prepare data with serial IDs
+  // Prepare data with serial IDs and serialNo for react-table S.No. column
   const data = useMemo(() => {
     let u = 0,
       a = 0,
       s = 0;
-    return usersData.map((user) => {
+    return usersData.map((user, idx) => {
       let prefix = "";
       if (user.userType === "User") prefix = "U-" + String(++u).padStart(3, "0");
       else if (user.userType === "Admin") prefix = "A-" + String(++a).padStart(3, "0");
       else if (user.userType === "Super Admin") prefix = "S-" + String(++s).padStart(3, "0");
-      return { ...user, serialId: prefix };
+      return { ...user, serialId: prefix, serialNo: idx + 1 };
     });
   }, [usersData]);
 
@@ -96,74 +96,7 @@ function RolesTable() {
     });
   }, [data, showUsers, showAdmins, showSuperAdmins]);
 
-  // Table columns
-
- 
-
-  const columns = useMemo(
-    () => [
-      {
-        Header: "S.No.",
-        accessor: (row, index) => index + 1,
-        id: "serialNo",
-      },
-      {
-        Header: "ID",
-        accessor: "serialId",
-      },
-      {
-        Header: "First Name",
-        accessor: "firstName",
-      },
-      {
-        Header: "Last Name",
-        accessor: "lastName",
-      },
-      {
-        Header: "Email",
-        accessor: "email",
-      },
-      {
-        Header: "Role",
-        accessor: "userType",
-        sortType: (a, b) => {
-          const order = { "Super Admin": 1, Admin: 2, User: 3 };
-          return order[a.original.userType] - order[b.original.userType];
-        },
-      },
-      {
-        Header: "Date Joined",
-        accessor: "createdAt",
-        Cell: ({ value }) => new Date(value).toLocaleDateString(),
-        sortType: (a, b) => new Date(a.original.createdAt) - new Date(b.original.createdAt),
-      },
-      ...(userType === "Super Admin"
-        ? [
-            {
-              Header: "Actions",
-              accessor: "actions",
-              Cell: ({ row }) => (
-                <div className="flex space-x-6">
-                  <FaEdit
-                    className="text-blue-600 hover:text-blue-900 cursor-pointer"
-                    title="Edit Role"
-                    onClick={() => handleEdit(row.original)}
-                  />
-                  <FaTrash
-                    className="text-red-600 hover:text-red-900 cursor-pointer"
-                    title="Delete"
-                    onClick={() => handleDelete(row.original)}
-                  />
-                </div>
-              ),
-            },
-          ]
-        : []),
-    ],
-    [userType]
-  );
-
-  // Action handlers
+  // Action handlers (move above columns)
   const handleEdit = useCallback((user) => {
     setEditUser(true);
     setSelectedUser(user);
@@ -174,11 +107,71 @@ function RolesTable() {
     setSelectedUser(user);
   }, []);
 
+  // Table columns
+  const columns = useMemo(() => [
+    {
+      Header: "S.No.",
+      accessor: "serialNo",
+      id: "serialNo",
+    },
+    {
+      Header: "ID",
+      accessor: "serialId",
+    },
+    {
+      Header: "First Name",
+      accessor: "firstName",
+    },
+    {
+      Header: "Last Name",
+      accessor: "lastName",
+    },
+    {
+      Header: "Email",
+      accessor: "email",
+    },
+    {
+      Header: "Role",
+      accessor: "userType",
+      sortType: (a, b) => {
+        const order = { "Super Admin": 1, Admin: 2, User: 3 };
+        return order[a.original.userType] - order[b.original.userType];
+      },
+    },
+    {
+      Header: "Date Joined",
+      accessor: "createdAt",
+      Cell: ({ value }) => new Date(value).toLocaleDateString(),
+      sortType: (a, b) => new Date(a.original.createdAt) - new Date(b.original.createdAt),
+    },
+    ...(userType === "Super Admin"
+      ? [{
+          Header: "Actions",
+          accessor: "actions",
+          Cell: ({ row }) => (
+            <div className="flex space-x-6">
+              <FaEdit
+                className="text-blue-600 hover:text-blue-900 cursor-pointer"
+                title="Edit Role"
+                onClick={() => handleEdit(row.original)}
+              />
+              <FaTrash
+                className="text-red-600 hover:text-red-900 cursor-pointer"
+                title="Delete"
+                onClick={() => handleDelete(row.original)}
+              />
+            </div>
+          ),
+        }]
+      : []),
+  ], [userType, handleEdit, handleDelete]);
+
+
   // THE FIX: Memoize table options to prevent infinite re-renders
+  // Remove initialState.globalFilter to avoid infinite update loop
   const tableOptions = useMemo(() => ({
     columns,
     data: filteredData,
-    initialState: { globalFilter: '' },
   }), [columns, filteredData]);
 
   // Table instance
@@ -252,51 +245,33 @@ function RolesTable() {
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white dark:bg-gray-800 border rounded shadow" {...getTableProps()}>
             <thead>
-              {headerGroups.map((headerGroup) => {
-                const { key, ...restHeaderGroupProps } = headerGroup.getHeaderGroupProps();
-                return (
-                  <tr key={key} {...restHeaderGroupProps}>
-                    {headerGroup.headers.map((column) => {
-                      const { key: headerKey, ...restHeaderProps } = column.getHeaderProps(column.getSortByToggleProps());
-                      return (
-                        <th
-                          key={headerKey}
-                          {...restHeaderProps}
-                          className="p-3 text-left bg-gray-100 dark:bg-gray-700 text-sm font-semibold"
-                        >
-                          <div className="flex items-center">
-                            {column.render("Header")}
-                            {column.isSorted && (column.isSortedDesc ? <FaSortDown /> : <FaSortUp />)}
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+              {headerGroups.map((headerGroup) => (
+                <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map((column) => (
+                    <th
+                      key={column.id}
+                      {...column.getHeaderProps(column.getSortByToggleProps())}
+                      className="p-3 text-left bg-gray-100 dark:bg-gray-700 text-sm font-semibold"
+                    >
+                      <div className="flex items-center">
+                        {column.render("Header")}
+                        {column.isSorted && (column.isSortedDesc ? <FaSortDown /> : <FaSortUp />)}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody {...getTableBodyProps()}>
               {rows.map((row) => {
                 prepareRow(row);
-                const { key, ...restRowProps } = row.getRowProps();
                 return (
-                  <tr 
-                    key={key} 
-                    {...restRowProps} 
-                    className="border-b hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    {row.cells.map((cell) => {
-                      const { key: cellKey, ...restCellProps } = cell.getCellProps();
-                      return (
-                        <td 
-                          key={cellKey} 
-                          {...restCellProps} 
-                          className="p-3 text-sm"
-                        >
-                          {cell.render("Cell")}
-                        </td>
-                      );
-                    })}
+                  <tr key={row.id} {...row.getRowProps()} className="border-b hover:bg-gray-100 dark:hover:bg-gray-700">
+                    {row.cells.map((cell) => (
+                      <td key={cell.column.id} {...cell.getCellProps()} className="p-3 text-sm">
+                        {cell.render("Cell")}
+                      </td>
+                    ))}
                   </tr>
                 );
               })}

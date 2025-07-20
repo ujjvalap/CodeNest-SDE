@@ -7,9 +7,8 @@ import { questionsApi } from './api/api'; // RTK Query API
 
 export const store = configureStore({
   reducer: {
-    user: authReducer,    
+    user: authReducer,    // single source of truth for user/auth state
     ui: uiReducer, 
-    auth: authReducer,          // merged slice
     [questionsApi.reducerPath]: questionsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

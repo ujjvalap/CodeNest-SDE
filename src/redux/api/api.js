@@ -19,8 +19,8 @@ export const questionsApi = createApi({
     'Questions',
     'AdminEmails',
     'AllData',
-    'CategoryData',        // ✅ NEW
-    'CategoryResponses',   // ✅ NEW
+    'CategoryData',        
+    'CategoryResponses',   
   ],
   endpoints: (builder) => ({
 

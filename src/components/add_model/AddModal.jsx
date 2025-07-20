@@ -37,8 +37,10 @@ function AddModal({ onClose, categories, selectedCategory, fetchCategories }) {
         await addCategory({
           category_name: categoryName,
           category_resources: categoryResource,
-        }).unwrap();
-        dispatch(setAuthError(`Added Category ${categoryName}`));
+        
+     
+     }).unwrap();
+        dispatch(setAuthError(`Added Category`));
       } else {
         await addQuestion({
           question_name: questionName,
@@ -46,6 +48,7 @@ function AddModal({ onClose, categories, selectedCategory, fetchCategories }) {
           question_difficulty: questionDifficulty,
           question_solution: solutionLink,
           categoryId: optedCategory || selectedCategory._id,
+
         }).unwrap();
         dispatch(setAuthError("Successfully added question"));
       }
@@ -55,7 +58,11 @@ function AddModal({ onClose, categories, selectedCategory, fetchCategories }) {
     } catch (error) {
       dispatch(
         setAuthError(error?.data?.message || error.message || "Operation failed")
-      );
+      )
+ 
+      console.error("Add Category Failed:", error);
+
+
     } finally {
       setIsLoading(false);
     }

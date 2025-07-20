@@ -7,12 +7,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleMode } from "../../redux/slices/uiSlice";
 import {resetUserState} from "../../redux/reducers/authSlice";
 
+
 function NavBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const mode = useSelector((state) => state.ui.mode);      // ✅ fixed
-  const userType = useSelector((state) => state.user.userType); // ✅ fixed
+  const mode = useSelector((state) => state.ui?.mode || "light");
+  const userType = useSelector((state) => state.user.userType);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isAdminRoute, setIsAdminRoute] = useState(true);

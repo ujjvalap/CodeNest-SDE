@@ -13,7 +13,6 @@ function Question({
   updateNote,
   notes,
   setCategoryDone,
-  categoryDone,
   refetchResponses,
 }) {
   const dispatch = useDispatch();

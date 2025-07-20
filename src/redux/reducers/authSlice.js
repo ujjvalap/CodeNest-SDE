@@ -1,13 +1,13 @@
 // src/redux/slices/userSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
+const initialState = Object.freeze({
   userType: null,      // 'admin', 'user', 'guest', etc.
   token: null,         // Auth token (JWT or similar)
   userInfo: null,      // Any user profile data
   error: null,         // Auth or global error
   progress: 0,         // For loading progress bar
-};
+});
 
 const userSlice = createSlice({
   name: "user",
@@ -27,7 +27,13 @@ const userSlice = createSlice({
       state.error = null;
     },
     setAuth: (state, action) => {
-      Object.assign(state, action.payload);
+      // Only update known keys for safety and performance
+      const { userType, token, userInfo, error, progress } = action.payload;
+      if (userType !== undefined) state.userType = userType;
+      if (token !== undefined) state.token = token;
+      if (userInfo !== undefined) state.userInfo = userInfo;
+      if (error !== undefined) state.error = error;
+      if (progress !== undefined) state.progress = progress;
     },
 
     // ✅ User Info
@@ -56,11 +62,29 @@ export const {
   resetUserState,
 } = userSlice.actions;
 
-// ✅ Selectors (Optional)
-export const selectUserType = (state) => state.user.userType;
-export const selectToken = (state) => state.user.token;
-export const selectUserInfo = (state) => state.user.userInfo;
-export const selectProgress = (state) => state.user.progress;
-export const selectAuthError = (state) => state.user.error;
+
+// ✅ Memoized Selectors for performance
+import { createSelector } from "reselect";
+
+export const selectUserType = createSelector(
+  (state) => state.user.userType,
+  (userType) => userType
+);
+export const selectToken = createSelector(
+  (state) => state.user.token,
+  (token) => token
+);
+export const selectUserInfo = createSelector(
+  (state) => state.user.userInfo,
+  (userInfo) => userInfo
+);
+export const selectProgress = createSelector(
+  (state) => state.user.progress,
+  (progress) => progress
+);
+export const selectAuthError = createSelector(
+  (state) => state.user.error,
+  (error) => error
+);
 
 export default userSlice.reducer;
